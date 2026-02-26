@@ -1,0 +1,29 @@
+{#
+    home.html - Pagina de inicio.
+
+    Muestra informacion general del proyecto y las tablas disponibles.
+#}
+
+{% extends 'layout/base.html' %}
+
+{% block title %}CRUD Facturas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h1>CRUD - Base de Datos Facturas</h1>
+
+    <p class="lead">
+        Frontend Flask que consume la API generica
+        <strong>ApiGenericaCsharp</strong> para gestionar las tablas
+        de <code>bdfacturas_sqlserver_local</code>.
+    </p>
+
+    <div class="alert alert-info">
+        <strong>Tablas disponibles:</strong> Empresa, Persona, Producto, Rol, Ruta, Usuario.
+        <br />
+        Use el menu lateral para navegar a cada tabla.
+    </div>
+
+</div>
+{% endblock %}

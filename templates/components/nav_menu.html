@@ -1,0 +1,72 @@
+{#
+    nav_menu.html - Menu de navegacion lateral.
+
+    Se incluye dentro del sidebar en base.html con {% include %}.
+    Muestra los links a Home y a las 6 tablas disponibles.
+    El link activo se resalta comparando la ruta actual (request.path).
+#}
+
+{# ───────── BARRA SUPERIOR DEL SIDEBAR ───────── #}
+{# Muestra el titulo de la aplicacion como un link a Home #}
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">CRUD Facturas</a>
+    </div>
+</div>
+
+{# ───────── TOGGLE PARA MOVIL ─────────
+   En pantallas pequenas, este checkbox funciona como boton hamburguesa.
+   Al marcarlo, se muestra el menu (controlado solo con CSS, sin JavaScript). #}
+<input type="checkbox" title="Menu de navegacion" class="navbar-toggler" id="navToggle" />
+
+{# ───────── LINKS DE NAVEGACION ───────── #}
+<div class="nav-scrollable">
+    <nav class="nav flex-column">
+
+        {# Link a la pagina de inicio #}
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">
+                <span class="bi bi-house-door-fill-nav-menu"></span> Home
+            </a>
+        </div>
+
+        {# Links a las 6 tablas sin clave foranea #}
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/empresa') }}" href="/empresa">
+                <span class="bi bi-list-nested-nav-menu"></span> Empresa
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/persona') }}" href="/persona">
+                <span class="bi bi-list-nested-nav-menu"></span> Persona
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/producto') }}" href="/producto">
+                <span class="bi bi-list-nested-nav-menu"></span> Producto
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/rol') }}" href="/rol">
+                <span class="bi bi-list-nested-nav-menu"></span> Rol
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/ruta') }}" href="/ruta">
+                <span class="bi bi-list-nested-nav-menu"></span> Ruta
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link {{ 'active' if request.path.startswith('/usuario') }}" href="/usuario">
+                <span class="bi bi-list-nested-nav-menu"></span> Usuario
+            </a>
+        </div>
+
+    </nav>
+</div>
