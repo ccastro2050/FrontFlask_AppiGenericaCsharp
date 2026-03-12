@@ -1,0 +1,304 @@
+{#
+    factura.html - Pagina CRUD para Facturas y Productos por Factura.
+
+    Usa stored procedures a traves de la API.
+    Variable 'vista' controla que se muestra: 'listar', 'ver', 'formulario'
+
+    Campos del SP listar (cada factura):
+        numero, fecha, total, fkidcliente, nombre_cliente, fkidvendedor, nombre_vendedor,
+        productos: [{codigo_producto, nombre_producto, cantidad, valorunitario, subtotal}]
+
+    Campos del SP consultar:
+        factura: {numero, fecha, total, fkidcliente, nombre_cliente, fkidvendedor, nombre_vendedor}
+        productos: [{codigo_producto, nombre_producto, cantidad, valorunitario, subtotal}]
+#}
+
+{% extends 'layout/base.html' %}
+
+{% block title %}Facturas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Facturas y Productos por Factura</h3>
+
+    {# ═══════════════════════════════════════════
+       VISTA: LISTAR FACTURAS
+       ═══════════════════════════════════════════ #}
+    {% if vista == 'listar' %}
+
+        <a href="{{ url_for('factura.nueva') }}" class="btn btn-primary mb-3">
+            Nueva Factura
+        </a>
+
+        {% if facturas %}
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Numero</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Productos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fac in facturas %}
+                    <tr>
+                        <td>{{ fac.numero }}</td>
+                        <td>{{ fac.nombre_cliente }} (ID: {{ fac.fkidcliente }})</td>
+                        <td>{{ fac.nombre_vendedor }} (ID: {{ fac.fkidvendedor }})</td>
+                        <td>{{ fac.fecha[:10] if fac.fecha else '' }}</td>
+                        <td>${{ "%.2f"|format(fac.total|float) }}</td>
+                        <td>{{ fac.productos|length if fac.productos else 0 }}</td>
+                        <td>
+                            <a href="{{ url_for('factura.ver', numero=fac.numero) }}"
+                               class="btn btn-info btn-sm me-1">Ver</a>
+                            <a href="{{ url_for('factura.editar', numero=fac.numero) }}"
+                               class="btn btn-warning btn-sm me-1">Editar</a>
+                            <form method="POST" action="{{ url_for('factura.eliminar') }}"
+                                  style="display:inline"
+                                  onsubmit="return confirm('Eliminar factura #{{ fac.numero }} y todos sus productos?')">
+                                <input type="hidden" name="numero" value="{{ fac.numero }}" />
+                                <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-warning">No se encontraron facturas.</div>
+        {% endif %}
+
+    {# ═══════════════════════════════════════════
+       VISTA: VER DETALLE DE FACTURA
+       ═══════════════════════════════════════════ #}
+    {% elif vista == 'ver' %}
+
+        <a href="{{ url_for('factura.index') }}" class="btn btn-secondary mb-3">
+            Volver al listado
+        </a>
+
+        {% if factura %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Factura #{{ factura.numero }}</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Cliente:</strong> {{ factura.nombre_cliente }}
+                            (ID: {{ factura.fkidcliente }})
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Vendedor:</strong> {{ factura.nombre_vendedor }}
+                            (ID: {{ factura.fkidvendedor }})
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Fecha:</strong> {{ factura.fecha[:10] if factura.fecha else '' }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Total:</strong> ${{ "%.2f"|format(factura.total|float) }}
+                        </div>
+                    </div>
+
+                    <h5>Productos</h5>
+                    {% if factura.productos %}
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prod in factura.productos %}
+                                <tr>
+                                    <td>{{ prod.codigo_producto }}</td>
+                                    <td>{{ prod.nombre_producto }}</td>
+                                    <td>{{ prod.cantidad }}</td>
+                                    <td>${{ "%.2f"|format(prod.valorunitario|float) }}</td>
+                                    <td>${{ "%.2f"|format(prod.subtotal|float) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="alert alert-info">Sin productos.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <a href="{{ url_for('factura.editar', numero=factura.numero) }}"
+               class="btn btn-warning me-2">Editar</a>
+            <form method="POST" action="{{ url_for('factura.eliminar') }}"
+                  style="display:inline"
+                  onsubmit="return confirm('Eliminar factura #{{ factura.numero }} y todos sus productos?')">
+                <input type="hidden" name="numero" value="{{ factura.numero }}" />
+                <button class="btn btn-danger" type="submit">Eliminar</button>
+            </form>
+        {% else %}
+            <div class="alert alert-danger">Factura no encontrada.</div>
+        {% endif %}
+
+    {# ═══════════════════════════════════════════
+       VISTA: FORMULARIO (CREAR / EDITAR)
+       ═══════════════════════════════════════════ #}
+    {% elif vista == 'formulario' %}
+
+        <a href="{{ url_for('factura.index') }}" class="btn btn-secondary mb-3">
+            Volver al listado
+        </a>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                {{ "Editar Factura #" ~ factura.numero if editando else "Nueva Factura" }}
+            </div>
+            <div class="card-body">
+                <form method="POST"
+                      action="{{ url_for('factura.actualizar') if editando else url_for('factura.crear') }}"
+                      id="formFactura">
+
+                    {% if editando %}
+                        <input type="hidden" name="numero" value="{{ factura.numero }}" />
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        {# Select Cliente #}
+                        <div class="col-md-6">
+                            <label class="form-label">Cliente</label>
+                            <select class="form-select" name="fkidcliente" required>
+                                <option value="">-- Seleccionar --</option>
+                                {% for cli in clientes %}
+                                    <option value="{{ cli.id }}"
+                                        {{ 'selected' if editando and factura and factura.fkidcliente == cli.id }}>
+                                        ID {{ cli.id }} - Persona: {{ cli.fkcodpersona }} (Credito: ${{ cli.credito }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Select Vendedor #}
+                        <div class="col-md-6">
+                            <label class="form-label">Vendedor</label>
+                            <select class="form-select" name="fkidvendedor" required>
+                                <option value="">-- Seleccionar --</option>
+                                {% for ven in vendedores %}
+                                    <option value="{{ ven.id }}"
+                                        {{ 'selected' if editando and factura and factura.fkidvendedor == ven.id }}>
+                                        ID {{ ven.id }} - Carnet: {{ ven.carnet }} ({{ ven.direccion }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {# ───────── PRODUCTOS DINAMICOS ───────── #}
+                    <h5>Productos</h5>
+                    <div id="productos-container">
+                        {% if editando and factura and factura.productos %}
+                            {% for prod in factura.productos %}
+                            <div class="row mb-2 producto-fila">
+                                <div class="col-md-5">
+                                    <select class="form-select" name="prod_codigo[]" required>
+                                        <option value="">-- Producto --</option>
+                                        {% for p in productos_disponibles %}
+                                            <option value="{{ p.codigo }}"
+                                                {{ 'selected' if p.codigo == prod.codigo_producto }}>
+                                                {{ p.codigo }} - {{ p.nombre }} (Stock: {{ p.stock }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input class="form-control" type="number" name="prod_cantidad[]"
+                                           min="1" value="{{ prod.cantidad }}" placeholder="Cantidad" required />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="this.closest('.producto-fila').remove()">Quitar</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="row mb-2 producto-fila">
+                                <div class="col-md-5">
+                                    <select class="form-select" name="prod_codigo[]" required>
+                                        <option value="">-- Producto --</option>
+                                        {% for p in productos_disponibles %}
+                                            <option value="{{ p.codigo }}">
+                                                {{ p.codigo }} - {{ p.nombre }} (Stock: {{ p.stock }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input class="form-control" type="number" name="prod_cantidad[]"
+                                           min="1" value="1" placeholder="Cantidad" required />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="this.closest('.producto-fila').remove()">Quitar</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-3"
+                            onclick="agregarProducto()">
+                        + Agregar Producto
+                    </button>
+
+                    <div>
+                        <button class="btn btn-success me-2" type="submit">Guardar</button>
+                        <a href="{{ url_for('factura.index') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ───────── JAVASCRIPT: agregar filas de productos ───────── #}
+        <script>
+            function agregarProducto() {
+                const container = document.getElementById('productos-container');
+                const primeraFila = container.querySelector('.producto-fila');
+                if (!primeraFila) {
+                    const opciones = {{ productos_disponibles | tojson }};
+                    let selectHtml = '<option value="">-- Producto --</option>';
+                    opciones.forEach(p => {
+                        selectHtml += `<option value="${p.codigo}">${p.codigo} - ${p.nombre} (Stock: ${p.stock})</option>`;
+                    });
+                    container.innerHTML += `
+                        <div class="row mb-2 producto-fila">
+                            <div class="col-md-5">
+                                <select class="form-select" name="prod_codigo[]" required>${selectHtml}</select>
+                            </div>
+                            <div class="col-md-3">
+                                <input class="form-control" type="number" name="prod_cantidad[]"
+                                       min="1" value="1" placeholder="Cantidad" required />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="this.closest('.producto-fila').remove()">Quitar</button>
+                            </div>
+                        </div>`;
+                    return;
+                }
+                const nuevaFila = primeraFila.cloneNode(true);
+                nuevaFila.querySelector('select').selectedIndex = 0;
+                nuevaFila.querySelector('input[type="number"]').value = 1;
+                container.appendChild(nuevaFila);
+            }
+        </script>
+
+    {% endif %}
+
+</div>
+{% endblock %}

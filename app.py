@@ -41,6 +41,7 @@ from routes.producto import bp as producto_bp  # Blueprint CRUD de producto
 from routes.rol import bp as rol_bp            # Blueprint CRUD de rol
 from routes.ruta import bp as ruta_bp          # Blueprint CRUD de ruta
 from routes.usuario import bp as usuario_bp    # Blueprint CRUD de usuario
+from routes.factura import bp as factura_bp    # Blueprint CRUD de facturas (SPs)
 
 # register_blueprint() conecta las rutas del Blueprint a la aplicacion Flask.
 # Sin esto, las URLs definidas en cada Blueprint no funcionarian.
@@ -51,6 +52,7 @@ app.register_blueprint(producto_bp)  # Registra /producto, /producto/crear, etc.
 app.register_blueprint(rol_bp)       # Registra /rol, /rol/crear, etc.
 app.register_blueprint(ruta_bp)      # Registra /ruta, /ruta/crear, etc.
 app.register_blueprint(usuario_bp)   # Registra /usuario, /usuario/crear, etc.
+app.register_blueprint(factura_bp)   # Registra /factura, /factura/crear, etc. (usa SPs)
 
 
 # ══════════════════════════════════════════════

@@ -208,3 +208,47 @@ class ApiService:
         # Capturar errores de conexion
         except requests.RequestException as ex:
             return (False, f"Error de conexion: {ex}")
+
+    # ──────────────────────────────────────────────
+    # EJECUTAR SP: POST /api/procedimientos/ejecutarsp
+    # Llama a un procedimiento almacenado a traves de la API.
+    # ──────────────────────────────────────────────
+    def ejecutar_sp(self, nombre_sp, parametros=None):
+        """
+        Ejecuta un stored procedure via la API.
+
+        Args:
+            nombre_sp:   nombre del procedimiento
+            parametros:  diccionario con los parametros del SP (sin nombreSP)
+
+        Returns:
+            Tupla (exito: bool, datos_o_mensaje)
+        """
+        try:
+            import json as json_mod
+            url = f"{self.base_url}/api/procedimientos/ejecutarsp"
+
+            payload = {"nombreSP": nombre_sp}
+            if parametros:
+                payload.update(parametros)
+
+            respuesta = requests.post(url, json=payload)
+            contenido = respuesta.json()
+
+            if not respuesta.ok:
+                mensaje = contenido.get("mensaje", "Error al ejecutar el procedimiento.")
+                return (False, mensaje)
+
+            resultados = contenido.get("resultados", [])
+            if resultados and "p_resultado" in resultados[0]:
+                p_resultado = resultados[0]["p_resultado"]
+                if isinstance(p_resultado, str):
+                    return (True, json_mod.loads(p_resultado))
+                return (True, p_resultado)
+
+            return (True, contenido)
+
+        except requests.RequestException as ex:
+            return (False, f"Error de conexion: {ex}")
+        except Exception as ex:
+            return (False, f"Error procesando respuesta: {ex}")
