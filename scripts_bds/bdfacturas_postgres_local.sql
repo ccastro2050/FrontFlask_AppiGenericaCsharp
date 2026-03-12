@@ -341,6 +341,7 @@ CREATE OR REPLACE PROCEDURE sp_insertar_factura_y_productosporfactura(
     IN p_fkidcliente INTEGER,
     IN p_fkidvendedor INTEGER,
     IN p_productos JSON,
+    IN p_minimo_detalle INTEGER DEFAULT 1,
     INOUT p_resultado JSON DEFAULT NULL
 )
 LANGUAGE plpgsql
@@ -351,6 +352,13 @@ DECLARE
     v_codigo VARCHAR;
     v_cantidad INTEGER;
 BEGIN
+    -- Validar minimo de productos
+    -- NULLIF(p_minimo_detalle, 0): la API envia 0 cuando no se pasa el parametro, NULLIF lo convierte a NULL
+    -- COALESCE(..., 1): si es NULL usa 1 como default
+    IF p_productos IS NULL OR json_array_length(p_productos) < COALESCE(NULLIF(p_minimo_detalle, 0), 1) THEN
+        RAISE EXCEPTION 'La factura requiere minimo % producto(s).', COALESCE(NULLIF(p_minimo_detalle, 0), 1);
+    END IF;
+
     -- Crear la factura con total 0 (el trigger actualiza el total)
     INSERT INTO factura (fkidcliente, fkidvendedor, total)
     VALUES (p_fkidcliente, p_fkidvendedor, 0)
@@ -503,6 +511,7 @@ CREATE OR REPLACE PROCEDURE sp_actualizar_factura_y_productosporfactura(
     IN p_fkidcliente INTEGER,
     IN p_fkidvendedor INTEGER,
     IN p_productos JSON,
+    IN p_minimo_detalle INTEGER DEFAULT 1,
     INOUT p_resultado JSON DEFAULT NULL
 )
 LANGUAGE plpgsql
@@ -514,6 +523,13 @@ DECLARE
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM factura WHERE factura.numero = p_numero) THEN
         RAISE EXCEPTION 'Factura % no existe', p_numero;
+    END IF;
+
+    -- Validar minimo de productos
+    -- NULLIF(p_minimo_detalle, 0): la API envia 0 cuando no se pasa el parametro, NULLIF lo convierte a NULL
+    -- COALESCE(..., 1): si es NULL usa 1 como default
+    IF p_productos IS NULL OR json_array_length(p_productos) < COALESCE(NULLIF(p_minimo_detalle, 0), 1) THEN
+        RAISE EXCEPTION 'La factura requiere minimo % producto(s).', COALESCE(NULLIF(p_minimo_detalle, 0), 1);
     END IF;
 
     -- Eliminar detalle anterior (el trigger restaura stock y recalcula total)
