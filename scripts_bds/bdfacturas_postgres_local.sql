@@ -278,12 +278,26 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
+        -- Validar stock suficiente
+        IF (SELECT stock FROM producto WHERE codigo = NEW.fkcodproducto) < NEW.cantidad THEN
+            RAISE EXCEPTION 'Stock insuficiente para producto %. Stock disponible: %, cantidad solicitada: %',
+                NEW.fkcodproducto,
+                (SELECT stock FROM producto WHERE codigo = NEW.fkcodproducto),
+                NEW.cantidad;
+        END IF;
         NEW.subtotal := NEW.cantidad * (SELECT valorunitario FROM producto WHERE codigo = NEW.fkcodproducto);
         UPDATE producto SET stock = stock - NEW.cantidad WHERE codigo = NEW.fkcodproducto;
         UPDATE factura SET total = (SELECT COALESCE(SUM(subtotal),0) FROM productosporfactura WHERE fknumfactura = NEW.fknumfactura) + NEW.subtotal WHERE numero = NEW.fknumfactura;
         RETURN NEW;
     END IF;
     IF TG_OP = 'UPDATE' THEN
+        -- Validar stock suficiente (considerando la devolucion del stock anterior)
+        IF (SELECT stock FROM producto WHERE codigo = NEW.fkcodproducto) + OLD.cantidad < NEW.cantidad THEN
+            RAISE EXCEPTION 'Stock insuficiente para producto %. Stock disponible: %, cantidad solicitada: %',
+                NEW.fkcodproducto,
+                (SELECT stock FROM producto WHERE codigo = NEW.fkcodproducto) + OLD.cantidad,
+                NEW.cantidad;
+        END IF;
         NEW.subtotal := NEW.cantidad * (SELECT valorunitario FROM producto WHERE codigo = NEW.fkcodproducto);
         UPDATE producto SET stock = stock + OLD.cantidad - NEW.cantidad WHERE codigo = NEW.fkcodproducto;
         UPDATE factura SET total = (SELECT COALESCE(SUM(subtotal),0) FROM productosporfactura WHERE fknumfactura = NEW.fknumfactura AND fkcodproducto != NEW.fkcodproducto) + NEW.subtotal WHERE numero = NEW.fknumfactura;

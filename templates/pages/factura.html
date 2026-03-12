@@ -179,7 +179,7 @@
                                 {% for cli in clientes %}
                                     <option value="{{ cli.id }}"
                                         {{ 'selected' if editando and factura and factura.fkidcliente == cli.id }}>
-                                        ID {{ cli.id }} - Persona: {{ cli.fkcodpersona }} (Credito: ${{ cli.credito }})
+                                        {{ cli.nombre }} (Credito: ${{ cli.credito }})
                                     </option>
                                 {% endfor %}
                             </select>
@@ -193,7 +193,7 @@
                                 {% for ven in vendedores %}
                                     <option value="{{ ven.id }}"
                                         {{ 'selected' if editando and factura and factura.fkidvendedor == ven.id }}>
-                                        ID {{ ven.id }} - Carnet: {{ ven.carnet }} ({{ ven.direccion }})
+                                        {{ ven.nombre }} (Carnet: {{ ven.carnet }})
                                     </option>
                                 {% endfor %}
                             </select>

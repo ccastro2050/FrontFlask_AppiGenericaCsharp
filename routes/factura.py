@@ -88,10 +88,18 @@ def ver(numero):
 @bp.route('/factura/nueva')
 def nueva():
     """Muestra el formulario para crear una factura."""
-    # Cargar clientes y vendedores para los selects
+    # Cargar clientes, vendedores, personas y productos para los selects
     clientes = api.listar('cliente')
     vendedores = api.listar('vendedor')
+    personas = api.listar('persona')
     productos = api.listar('producto')
+
+    # Cruzar cliente/vendedor con persona para obtener el nombre
+    mapa_personas = {p['codigo']: p['nombre'] for p in personas}
+    for cli in clientes:
+        cli['nombre'] = mapa_personas.get(cli.get('fkcodpersona'), 'Sin nombre')
+    for ven in vendedores:
+        ven['nombre'] = mapa_personas.get(ven.get('fkcodpersona'), 'Sin nombre')
 
     return render_template('pages/factura.html',
         vista='formulario',
@@ -168,10 +176,18 @@ def editar(numero):
         flash("Factura no encontrada.", "danger")
         return redirect(url_for('factura.index'))
 
-    # Cargar clientes, vendedores y productos para los selects
+    # Cargar clientes, vendedores, personas y productos para los selects
     clientes = api.listar('cliente')
     vendedores = api.listar('vendedor')
+    personas = api.listar('persona')
     productos = api.listar('producto')
+
+    # Cruzar cliente/vendedor con persona para obtener el nombre
+    mapa_personas = {p['codigo']: p['nombre'] for p in personas}
+    for cli in clientes:
+        cli['nombre'] = mapa_personas.get(cli.get('fkcodpersona'), 'Sin nombre')
+    for ven in vendedores:
+        ven['nombre'] = mapa_personas.get(ven.get('fkcodpersona'), 'Sin nombre')
 
     return render_template('pages/factura.html',
         vista='formulario',
