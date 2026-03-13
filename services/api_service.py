@@ -240,11 +240,13 @@ class ApiService:
                 return (False, mensaje)
 
             resultados = contenido.get("resultados", [])
-            if resultados and "p_resultado" in resultados[0]:
-                p_resultado = resultados[0]["p_resultado"]
-                if isinstance(p_resultado, str):
-                    return (True, json_mod.loads(p_resultado))
-                return (True, p_resultado)
+            if resultados:
+                # SQL Server retorna "@p_resultado", PostgreSQL retorna "p_resultado"
+                p_resultado = resultados[0].get("p_resultado") or resultados[0].get("@p_resultado")
+                if p_resultado is not None:
+                    if isinstance(p_resultado, str):
+                        return (True, json_mod.loads(p_resultado))
+                    return (True, p_resultado)
 
             return (True, contenido)
 
