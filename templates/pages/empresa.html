@@ -46,7 +46,8 @@
             </div>
             <div class="card-body">
                 <form method="POST"
-                      action="{{ url_for('empresa.actualizar') if editando else url_for('empresa.crear') }}">
+                      action="{{ url_for('empresa.actualizar') if editando else url_for('empresa.crear') }}"
+                      onsubmit="{{ 'return confirm(\'¿Está seguro de actualizar la Empresa?\')' if editando else '' }}">
                     <div class="row">
                         {# Campo Codigo: readonly cuando se esta editando #}
                         <div class="col-md-6 mb-3">
@@ -94,7 +95,7 @@
                         {# Boton Eliminar: formulario POST con confirmacion #}
                         <form method="POST" action="{{ url_for('empresa.eliminar') }}"
                               style="display:inline"
-                              onsubmit="return confirm('Eliminar este registro?')">
+                              onsubmit="return confirm('¿Está seguro de eliminar la Empresa \'{{ reg.codigo }}\'?')">
                             <input type="hidden" name="codigo" value="{{ reg.codigo }}" />
                             <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                         </form>

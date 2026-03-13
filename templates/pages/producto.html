@@ -38,7 +38,8 @@
             </div>
             <div class="card-body">
                 <form method="POST"
-                      action="{{ url_for('producto.actualizar') if editando else url_for('producto.crear') }}">
+                      action="{{ url_for('producto.actualizar') if editando else url_for('producto.crear') }}"
+                      onsubmit="{{ 'return confirm(\'¿Está seguro de actualizar el Producto?\')' if editando else '' }}">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Codigo</label>
@@ -94,7 +95,7 @@
 
                         <form method="POST" action="{{ url_for('producto.eliminar') }}"
                               style="display:inline"
-                              onsubmit="return confirm('Eliminar este registro?')">
+                              onsubmit="return confirm('¿Está seguro de eliminar el Producto \'{{ reg.codigo }}\'?')">
                             <input type="hidden" name="codigo" value="{{ reg.codigo }}" />
                             <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                         </form>

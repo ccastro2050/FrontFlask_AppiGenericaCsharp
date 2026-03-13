@@ -164,7 +164,8 @@
             <div class="card-body">
                 <form method="POST"
                       action="{{ url_for('factura.actualizar') if editando else url_for('factura.crear') }}"
-                      id="formFactura">
+                      id="formFactura"
+                      onsubmit="{{ 'return confirm(\'¿Está seguro de actualizar esta Factura?\')' if editando else '' }}">
 
                     {% if editando %}
                         <input type="hidden" name="numero" value="{{ factura.numero }}" />
